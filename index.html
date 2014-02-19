@@ -3,12 +3,15 @@
     <head>
     </head>
     <body style="margin:0; padding: 0; width: 100%; height: 100%">
-        <canvas id="canvas" style="margin: 0 auto;"></canvas>
+        <div id="container" style="margin: 20px auto 0;">
+            <h1>Group three or more circles of the same colour</h1>
+            <canvas id="canvas" style=""></canvas>
+        </div>
         <script src="fabric.min.js"></script>
         <script>
             window._tileSize = 48;
             window._horizontalTiles = 15;
-            window._verticalTiles = 15;
+            window._verticalTiles = 10;
 
             var Canvas = this.__canvas = new fabric.Canvas(
                 'canvas',
@@ -25,6 +28,14 @@
                 }
             };
 
+            var Logger = {
+                log: function(message) {
+                    if (console !== undefined && console.log !== undefined) {
+                        console.log(message);
+                    }
+                }
+            };
+
             var Game = function() {
 
                 var tileSize = window._tileSize;
@@ -35,6 +46,9 @@
                 var currentPiece = null;
 
                 self = this;
+
+                document.getElementById('container').style.width = (horizontalTiles * tileSize) + 1 + 'px';
+                document.getElementById('container').style.height = (verticalTiles * tileSize) + 1 + 'px';
 
                 Canvas.setDimensions({
                     width: (horizontalTiles * tileSize) + 1,
@@ -55,36 +69,82 @@
 
                 Canvas.on(
                     {
-                        'object:selected': function(e) {
-                            var row = Math.round((e.target.top-1) / window._tileSize);
-                            var column = Math.round((e.target.left-1) / window._tileSize);
+                        'mouse:down': function(options) {
 
-                            self.setCurrentPiece(row, column);
+                            window._mouseBeginningX = options.e.offsetX;
+                            window._mouseBeginningY = options.e.offsetY;
+
+                            self.setCurrentPiece(
+                                self.getBoard().getRowAt(options.e.offsetY),
+                                self.getBoard().getColumnAt(options.e.offsetX)
+                            );
+
+                            //Logger.log('clicou ' + self.getBoard().getRowAt(options.e.offsetY) + ':' + self.getBoard().getColumnAt(options.e.offsetX));
                         },
-                        'object:moving': function(e) {
+                        'mouse:up': function(options) {
 
-                            e.target.bringToFront();
-                            
+                            var board = self.getBoard();
                             var movedPiece = self.getCurrentPiece();
+
                             var oldRow = movedPiece.getRow();
                             var oldColumn = movedPiece.getColumn();
 
-                            var newRow = Math.round((e.target.top-1) / window._tileSize);
-                            var newColumn = Math.round((e.target.left-1) / window._tileSize);
+                            var mouseRow = board.getRowAt(options.e.offsetY);
+                            var mouseColumn = board.getColumnAt(options.e.offsetX);
 
-                            movedPiece.moveTo(newRow, newColumn);
+                            //Logger.log('soltou ' + mouseRow + ':' + mouseColumn);
 
-                            // If piece was moved outside its cell
-                            if (newRow != oldRow || newColumn != oldColumn) {
-                                var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
-                                replacedPiece.moveTo(oldRow, oldColumn);
+                            // Moved outside board
+                            if (!board.checkPosition(mouseRow, mouseColumn)) {
 
-                                // Play sound
-                                Sound.playMove();
+                                return Logger.log('moveu pra fora');
+                                // @TODO play "failure" sound
                             }
-                        },
-                        'object:modified': function(e) {
-                            e.target.opacity = 1;
+
+                            // Moved mouse outside initial place
+                            if (mouseRow == oldRow && mouseColumn == oldColumn) {
+                                return Logger.log('posicao do mouse nao mudou');
+                            }
+
+                            var newRow = oldRow;
+                            var newColumn = oldColumn;
+
+                            // Limit row movement to 1 position
+                            // diagonal become either up or down
+                            if (mouseRow < oldRow) {
+                                newRow--;
+                            } else if (mouseRow > oldRow) {
+                                newRow++;
+                            } else if (mouseColumn > oldColumn) {
+                                newColumn++;
+                            } else {
+                                newColumn--;
+                            }
+
+                            // If it explodes the board limit, does nothing
+                            var firstRow = 0;
+                            var firstColumn = 0;
+                            var lastRow = board.getLastRow();
+                            var lastColumn = board.getLastColumn();
+
+                            if (!board.checkPosition(newRow, newColumn)) {
+
+                                return Logger.log('calculou pra fora');
+                                // @TODO play "failure" sound
+                            }
+
+                            if (newRow == oldRow && newColumn == oldColumn) {
+                                return Logger.log('posicao da peca nao mudou');
+                            }
+
+                            var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
+
+                            board.move(movedPiece, replacedPiece);
+
+                            Logger.log('moveu de ' + oldRow + ':' + oldColumn + ' pra ' + newRow + ':' + newColumn);
+
+                            // Play sound
+                            Sound.playMove();
                         }
                     }
                 );
@@ -104,16 +164,20 @@
                 };
 
                 this.type = Math.floor(Math.random() * 6) + 1;
+                
                 var color = this.color = types[this.type];
-
-                this.doll = null;
-                this.row = _row;
-                this.column = _column;
-
                 var board = _board;
 
-                var top = _row * board.tileSize;
-                var left = _column * board.tileSize;
+                this.row = _row;
+                this.column = _column;
+                this.locked = false;
+                this.doll = self.doll = new fabric.Circle({
+                    top: (self.row * board.tileSize) + 1,
+                    left: (self.column * board.tileSize) + 1,
+                    radius: (board.tileSize/2) - 1,
+                    fill: color,
+                    selectable: false
+                });
 
                 this.getRow = function() {
                     return self.row;
@@ -123,27 +187,18 @@
                     return self.column;
                 };
 
-                this.moveTo = function(newRow, newColumn) {
+                this.move = function(newRow, newColumn) {
 
                     self.getDoll().set({
                         left: 1 + (newColumn * window._tileSize),
                         top: 1 + (newRow * window._tileSize)
                     });
+                    self.getDoll().bringToFront();
                     self.row = newRow;
                     self.column = newColumn;
                 };
 
                 this.getDoll = function() {
-                    if (self.doll == null) {
-                        self.doll = new fabric.Circle({
-                            top: top + 1,
-                            left: left + 1,
-                            radius: (board.tileSize/2) - 1,
-                            fill: color,
-                            hasControls: false,
-                            hasBorders: false
-                        })
-                    }
                     return self.doll;
                 };
             };
@@ -152,9 +207,9 @@
                 this.width = width;
                 this.height = height;
                 this.tileSize = tileSize;
-                var pieces = [];
+                this.pieces = [];
 
-                var __board = this;
+                var self = this;
 
                 for (var row = 0; row < height; row++) {
 
@@ -188,11 +243,61 @@
                         );
                     }
 
-                    pieces.push(rowPieces);
+                    this.pieces.push(rowPieces);
                 }
 
                 this.getPiece = function(row, column) {
-                    return pieces[row][column];
+                    return self.pieces[row][column];
+                };
+
+                this.getRowAt = function(top) {
+                    return Math.floor(top / window._tileSize);
+                };
+
+                this.getColumnAt = function(left) {
+                    return Math.floor(left / window._tileSize);
+                };
+
+                this.getLastRow = function() {
+                    return window._verticalTiles - 1;
+                };
+
+                this.getLastColumn = function() {
+                    return window._horizontalTiles - 1;
+                };
+
+                this.move = function(piece1, piece2) {
+
+                    var oldRow    = piece1.row;
+                    var oldColumn = piece1.column;
+
+                    var newRow    = piece2.row;
+                    var newColumn = piece2.column;
+
+                    self.pieces[oldRow][oldColumn] = piece2;
+                    self.pieces[newRow][newColumn] = piece1;
+
+                    piece1.move(newRow, newColumn);
+                    piece2.move(oldRow, oldColumn);
+                };
+
+                this.checkPosition = function(newRow, newColumn) {
+                    var firstRow = 0;
+                    var firstColumn = 0;
+                    var lastRow = self.getLastRow();
+                    var lastColumn = self.getLastColumn();
+
+                    if (
+                        newRow < firstRow
+                        || newRow > lastRow
+                        || newColumn < firstColumn
+                        || newColumn > lastColumn
+                        ) {
+
+                        return false;
+                    } else {
+                        return true;
+                    }
                 };
             };
 
