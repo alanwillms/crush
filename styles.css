@@ -1,0 +1,17 @@
+body {
+    color: #666;
+    font: 16px/1.5em Helvetica,Arial,sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+h1 {
+    font-size: 24px;
+    text-align: center;
+}
+
+#container {
+    margin: 20px auto 0;
+}
