@@ -6,6 +6,10 @@
         <canvas id="canvas" style="margin: 0 auto;"></canvas>
         <script src="fabric.min.js"></script>
         <script>
+            window._tileSize = 48;
+            window._horizontalTiles = 15;
+            window._verticalTiles = 15;
+
             var Canvas = this.__canvas = new fabric.Canvas(
                 'canvas',
                 {
@@ -14,36 +18,70 @@
                 }
             );
 
-            Canvas.on(
-                {
-                    'object:moving': function(e) {
-                        e.target.bringToFront();
-                        e.target.set({
-                            left: 1 + (Math.round((e.target.left-1) / 48) * 48),
-                            top: 1 + (Math.round((e.target.top-1) / 48) * 48)
-                        });
-                    },
-                    'object:modified': function(e) {
-                        e.target.opacity = 1;
-                    }
-                }
-            );
-
             var Game = function() {
 
-                var tileSize = 48;
-                var horizontalTiles = 15;
-                var verticalTiles = 15;
+                var tileSize = window._tileSize;
+                var horizontalTiles = window._horizontalTiles;
+                var verticalTiles = window._verticalTiles;
+                var board = new Board(horizontalTiles, verticalTiles, tileSize);
 
-                new Board(horizontalTiles, verticalTiles, tileSize);
+                var currentPiece = null;
+
+                self = this;
 
                 Canvas.setDimensions({
                     width: (horizontalTiles * tileSize) + 1,
                     height: (verticalTiles * tileSize) + 1
                 });
+
+                this.getBoard = function() {
+                    return board;
+                }
+
+                this.setCurrentPiece = function(row, column) {
+                    currentPiece = self.getBoard().getPiece(row, column);
+                };
+
+                this.getCurrentPiece = function() {
+                    return currentPiece;
+                };
+
+                Canvas.on(
+                    {
+                        'object:selected': function(e) {
+                            var row = Math.round((e.target.top-1) / window._tileSize);
+                            var column = Math.round((e.target.left-1) / window._tileSize);
+
+                            self.setCurrentPiece(row, column);
+                        },
+                        'object:moving': function(e) {
+
+                            e.target.bringToFront();
+                            
+                            var movedPiece = self.getCurrentPiece();
+                            var oldRow = movedPiece.getRow();
+                            var oldColumn = movedPiece.getColumn();
+
+                            var newRow = Math.round((e.target.top-1) / window._tileSize);
+                            var newColumn = Math.round((e.target.left-1) / window._tileSize);
+
+                            movedPiece.moveTo(newRow, newColumn);
+
+                            if (newRow != oldRow || newColumn != oldColumn) {
+                                var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
+                                replacedPiece.moveTo(oldRow, oldColumn);
+                            }
+                        },
+                        'object:modified': function(e) {
+                            e.target.opacity = 1;
+                        }
+                    }
+                );
             };
 
-            var Piece = function() {
+            var Piece = function(_board, _row, _column) {
+
+                var self = this;
 
                 var types = {
                     1: '#FF0000', // vermelho
@@ -55,14 +93,55 @@
                 };
 
                 this.type = Math.floor(Math.random() * 6) + 1;
-                this.color = types[this.type];
+                var color = this.color = types[this.type];
+
+                this.doll = null;
+                this.row = _row;
+                this.column = _column;
+
+                var board = _board;
+
+                var top = _row * board.tileSize;
+                var left = _column * board.tileSize;
+
+                this.getRow = function() {
+                    return self.row;
+                };
+
+                this.getColumn = function() {
+                    return self.column;
+                };
+
+                this.moveTo = function(newRow, newColumn) {
+
+                    self.getDoll().set({
+                        left: 1 + (newColumn * window._tileSize),
+                        top: 1 + (newRow * window._tileSize)
+                    });
+                    self.row = newRow;
+                    self.column = newColumn;
+                };
+
+                this.getDoll = function() {
+                    if (self.doll == null) {
+                        self.doll = new fabric.Circle({
+                            top: top + 1,
+                            left: left + 1,
+                            radius: (board.tileSize/2) - 1,
+                            fill: color,
+                            hasControls: false,
+                            hasBorders: false
+                        })
+                    }
+                    return self.doll;
+                };
             };
 
-            var Board = function(width, height, size) {
+            var Board = function(width, height, tileSize) {
                 this.width = width;
                 this.height = height;
-                this.size = size;
-                this.pieces = [];
+                this.tileSize = tileSize;
+                var pieces = [];
 
                 var __board = this;
 
@@ -72,9 +151,9 @@
 
                     for (var column = 0; column < width; column++) {
 
-                        var piece = new Piece();
-                        var top = row * size;
-                        var left = column * size;
+                        var piece = new Piece(this, row, column);
+                        var top = row * tileSize;
+                        var left = column * tileSize;
 
                         // Add piece
                         rowPieces.push(piece);
@@ -84,8 +163,8 @@
                             new fabric.Rect({
                                 top: top,
                                 left: left,
-                                width: size,
-                                height: size,
+                                width: tileSize,
+                                height: tileSize,
                                 fill: 'transparent',
                                 stroke: '#000',
                                 selectable: false
@@ -94,19 +173,16 @@
 
                         Canvas.add(
                             // Draw piece
-                            new fabric.Circle({
-                                top: top + 1,
-                                left: left + 1,
-                                radius: (size/2) - 1,
-                                fill: piece.color,
-                                hasControls: false,
-                                hasBorders: false
-                            })
+                            piece.getDoll()
                         );
                     }
 
-                    this.pieces.push(rowPieces);
+                    pieces.push(rowPieces);
                 }
+
+                this.getPiece = function(row, column) {
+                    return pieces[row][column];
+                };
             };
 
             new Game();
