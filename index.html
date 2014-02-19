@@ -4,9 +4,30 @@
     </head>
     <body style="margin:0; padding: 0; width: 100%; height: 100%">
         <canvas id="canvas" style="margin: 0 auto;"></canvas>
-        <script src="http://fabricjs.com/lib/fabric_static.js"></script>
+        <script src="fabric.min.js"></script>
         <script>
-            var Canvas = this.__canvas = new fabric.StaticCanvas('canvas');
+            var Canvas = this.__canvas = new fabric.Canvas(
+                'canvas',
+                {
+                    hoverCursor: 'pointer',
+                    selection: false
+                }
+            );
+
+            Canvas.on(
+                {
+                    'object:moving': function(e) {
+                        e.target.bringToFront();
+                        e.target.set({
+                            left: 1 + (Math.round((e.target.left-1) / 48) * 48),
+                            top: 1 + (Math.round((e.target.top-1) / 48) * 48)
+                        });
+                    },
+                    'object:modified': function(e) {
+                        e.target.opacity = 1;
+                    }
+                }
+            );
 
             var Game = function() {
 
@@ -17,8 +38,8 @@
                 new Board(horizontalTiles, verticalTiles, tileSize);
 
                 Canvas.setDimensions({
-                    width: horizontalTiles * tileSize,
-                    height: verticalTiles * tileSize
+                    width: (horizontalTiles * tileSize) + 1,
+                    height: (verticalTiles * tileSize) + 1
                 });
             };
 
@@ -52,8 +73,8 @@
                     for (var column = 0; column < width; column++) {
 
                         var piece = new Piece();
-                        var top = (size/2) + row * size;
-                        var left = (size/2) + column * size;
+                        var top = row * size;
+                        var left = column * size;
 
                         // Add piece
                         rowPieces.push(piece);
@@ -65,18 +86,21 @@
                                 left: left,
                                 width: size,
                                 height: size,
-                                fill: '#fff',
-                                stroke: '#000'
+                                fill: 'transparent',
+                                stroke: '#000',
+                                selectable: false
                             })
                         );
 
                         Canvas.add(
                             // Draw piece
                             new fabric.Circle({
-                                top: top,
-                                left: left,
-                                radius: size/2.5,
-                                fill: piece.color
+                                top: top + 1,
+                                left: left + 1,
+                                radius: (size/2) - 1,
+                                fill: piece.color,
+                                hasControls: false,
+                                hasBorders: false
                             })
                         );
                     }
