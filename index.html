@@ -143,6 +143,8 @@
 
                             Logger.log('moveu de ' + oldRow + ':' + oldColumn + ' pra ' + newRow + ':' + newColumn);
 
+                            board.removeMatches();
+
                             // Play sound
                             Sound.playMove();
                         }
@@ -164,7 +166,7 @@
                 };
 
                 this.type = Math.floor(Math.random() * 6) + 1;
-                
+
                 var color = this.color = types[this.type];
                 var board = _board;
 
@@ -200,6 +202,12 @@
 
                 this.getDoll = function() {
                     return self.doll;
+                };
+
+                this.destroy = function() {
+                    // @TODO play sound and explosion animation
+                    // @TODO drop new pieces
+                    return Canvas.remove(self.doll);
                 };
             };
 
@@ -264,6 +272,41 @@
 
                 this.getLastColumn = function() {
                     return window._horizontalTiles - 1;
+                };
+
+                this.removeMatches = function() {
+                    // Horizontal matches
+                    for (var row in self.pieces) {
+
+                        var previousColor;
+                        var repeatedColor = 1;
+                        var repeatedPieces = [];
+
+                        for (var column in self.pieces[row]) {
+
+                            var current = self.pieces[row][column];
+
+                            if (previousColor === current.color) {
+                                repeatedColor++;
+                            } else {
+                                repeatedColor = 1;
+                                previousColor = current.color;
+                            }
+
+                            if (repeatedColor > 3) {
+                                repeatedPieces.push(current);
+                            } else if (repeatedColor == 3) {
+                                repeatedPieces.push(current);
+                                repeatedPieces.push(self.pieces[row][column-1]);
+                                repeatedPieces.push(self.pieces[row][column-2]);
+                            }
+                        }
+
+                        // Eliminate pieces
+                        for (var k in repeatedPieces) {
+                            repeatedPieces[k].destroy();
+                        }
+                    }
                 };
 
                 this.move = function(piece1, piece2) {
