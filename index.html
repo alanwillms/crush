@@ -18,6 +18,13 @@
                 }
             );
 
+            var Sound = {
+                playMove: function() {
+                    var sound = new Audio('move.wav');
+                    sound.play();
+                }
+            };
+
             var Game = function() {
 
                 var tileSize = window._tileSize;
@@ -67,9 +74,13 @@
 
                             movedPiece.moveTo(newRow, newColumn);
 
+                            // If piece was moved outside its cell
                             if (newRow != oldRow || newColumn != oldColumn) {
                                 var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
                                 replacedPiece.moveTo(oldRow, oldColumn);
+
+                                // Play sound
+                                Sound.playMove();
                             }
                         },
                         'object:modified': function(e) {
