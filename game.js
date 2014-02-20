@@ -281,8 +281,8 @@ var Board = function(game, width, height, tileSize) {
                     left: left,
                     width: tileSize,
                     height: tileSize,
-                    fill: 'transparent',
-                    stroke: '#000',
+                    fill: 'rgba(255,255,255,0.2)',
+                    //stroke: '#000',
                     selectable: false
                 })
             );

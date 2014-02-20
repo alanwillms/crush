@@ -1,5 +1,6 @@
 body {
-    color: #666;
+    background: url(pattern.png);
+    color: #000;
     font: 16px/1.5em Helvetica,Arial,sans-serif;
     height: 100%;
     margin: 0;
