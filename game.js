@@ -399,6 +399,10 @@ var Board = function(game, width, height, tileSize) {
 
         game.getPointer().piecesDestroyed += removedPieces;
         game.getPointer().update();
+
+        while (self.getMatches().length > 0) {
+            self.animateRemoveMatches();
+        }
     };
 
     this.removeMatches = function() {
