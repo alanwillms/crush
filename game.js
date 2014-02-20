@@ -164,22 +164,22 @@ var Game = function() {
 
                 var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
 
-                board.move(movedPiece, replacedPiece);
+                board.move(movedPiece, replacedPiece, function(){
+                    if (board.getMatches().length > 0) {
 
-                if (board.getMatches().length > 0) {
+                        board.animateRemoveMatches();
 
-                    board.animateRemoveMatches();
+                        pointer.movements++;
+                        pointer.update();
 
-                    pointer.movements++;
-                    pointer.update();
+                        // Play sound
+                        Sound.playMove();
 
-                    // Play sound
-                    Sound.playMove();
-
-                } else {
-                    // Move back
-                    board.move(replacedPiece, movedPiece);
-                }
+                    } else {
+                        // Move back
+                        board.move(replacedPiece, movedPiece);
+                    }
+                });
             }
         }
     );
@@ -222,15 +222,28 @@ var Piece = function(_board, _row, _column) {
         return self.column;
     };
 
-    this.move = function(newRow, newColumn) {
-
-        self.getDoll().set({
-            left: 1 + (newColumn * window._tileSize),
-            top: 1 + (newRow * window._tileSize)
-        });
+    this.move = function(newRow, newColumn, callback)
+    {
         self.getDoll().bringToFront();
         self.row = newRow;
         self.column = newColumn;
+
+        self.getDoll().animate(
+            {
+                left: 1 + (newColumn * window._tileSize),
+                top: 1 + (newRow * window._tileSize)
+            },
+            {
+                duration: 250,
+                onChange: Canvas.renderAll.bind(Canvas),
+                onComplete: callback
+            }
+        );
+
+        // self.getDoll().set({
+        //     left: 1 + (newColumn * window._tileSize),
+        //     top: 1 + (newRow * window._tileSize)
+        // });
     };
 
     this.getDoll = function() {
@@ -258,6 +271,7 @@ var Board = function(game, width, height, tileSize) {
     this.height = height;
     this.tileSize = tileSize;
     this.pieces = [];
+    this.game = game;
 
     var self = this;
 
@@ -416,7 +430,7 @@ var Board = function(game, width, height, tileSize) {
         return repeatedPieces.length;
     };
 
-    this.move = function(piece1, piece2) {
+    this.move = function(piece1, piece2, callback) {
 
         var oldRow    = piece1.row;
         var oldColumn = piece1.column;
@@ -428,7 +442,7 @@ var Board = function(game, width, height, tileSize) {
         self.pieces[newRow][newColumn] = piece1;
 
         piece1.move(newRow, newColumn);
-        piece2.move(oldRow, oldColumn);
+        piece2.move(oldRow, oldColumn, callback);
     };
 
     this.checkPosition = function(newRow, newColumn) {
