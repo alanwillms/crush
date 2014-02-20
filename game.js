@@ -75,11 +75,6 @@ var Game = function() {
     document.getElementById('container').style.width = (horizontalTiles * tileSize) + 1 + 'px';
     document.getElementById('container').style.height = (verticalTiles * tileSize) + 1 + 'px';
 
-    // Canvas.setDimensions({
-    //     width: (horizontalTiles * tileSize) + 1,
-    //     height: (verticalTiles * tileSize) + 1
-    // });
-
     this.getBoard = function() {
         return board;
     };
@@ -171,13 +166,20 @@ var Game = function() {
 
                 board.move(movedPiece, replacedPiece);
 
-                board.removeMatches();
+                if (board.getMatches().length > 0) {
 
-                pointer.movements++;
-                pointer.update();
+                    board.removeMatches();
 
-                // Play sound
-                Sound.playMove();
+                    pointer.movements++;
+                    pointer.update();
+
+                    // Play sound
+                    Sound.playMove();
+
+                } else {
+                    // Move back
+                    board.move(replacedPiece, movedPiece);
+                }
             }
         }
     );
@@ -319,8 +321,7 @@ var Board = function(game, width, height, tileSize) {
         return window._horizontalTiles - 1;
     };
 
-    this.removeMatches = function() {
-
+    this.getMatches = function() {
         var repeatedPieces = {};
 
         // Horizontal matches
@@ -377,7 +378,19 @@ var Board = function(game, width, height, tileSize) {
             }
         }
 
-        // Eliminate pieces
+        var pieces = [];
+
+        for (k in repeatedPieces) {
+            pieces.push(repeatedPieces[k]);
+        }
+
+        return pieces;
+    };
+
+    this.removeMatches = function() {
+
+        var repeatedPieces = self.getMatches();
+
         var removedPieces = 0;
         for (var k in repeatedPieces) {
             repeatedPieces[k].destroy();
