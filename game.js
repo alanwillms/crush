@@ -67,8 +67,6 @@ var Game = function() {
                     self.getBoard().getRowAt(options.e.offsetY),
                     self.getBoard().getColumnAt(options.e.offsetX)
                 );
-
-                //Logger.log('clicou ' + self.getBoard().getRowAt(options.e.offsetY) + ':' + self.getBoard().getColumnAt(options.e.offsetX));
             },
             'mouse:up': function(options) {
 
@@ -81,18 +79,16 @@ var Game = function() {
                 var mouseRow = board.getRowAt(options.e.offsetY);
                 var mouseColumn = board.getColumnAt(options.e.offsetX);
 
-                //Logger.log('soltou ' + mouseRow + ':' + mouseColumn);
-
                 // Moved outside board
                 if (!board.checkPosition(mouseRow, mouseColumn)) {
 
-                    return Logger.log('moveu pra fora');
+                    return false;
                     // @TODO play "failure" sound
                 }
 
                 // Moved mouse outside initial place
                 if (mouseRow == oldRow && mouseColumn == oldColumn) {
-                    return Logger.log('posicao do mouse nao mudou');
+                    return false;
                 }
 
                 var newRow = oldRow;
@@ -118,19 +114,17 @@ var Game = function() {
 
                 if (!board.checkPosition(newRow, newColumn)) {
 
-                    return Logger.log('calculou pra fora');
+                    return false;
                     // @TODO play "failure" sound
                 }
 
                 if (newRow == oldRow && newColumn == oldColumn) {
-                    return Logger.log('posicao da peca nao mudou');
+                    return false;
                 }
 
                 var replacedPiece = self.getBoard().getPiece(newRow, newColumn);
 
                 board.move(movedPiece, replacedPiece);
-
-                Logger.log('moveu de ' + oldRow + ':' + oldColumn + ' pra ' + newRow + ':' + newColumn);
 
                 board.removeMatches();
 
@@ -194,9 +188,18 @@ var Piece = function(_board, _row, _column) {
     };
 
     this.destroy = function() {
+
+
         // @TODO play sound and explosion animation
         // @TODO drop new pieces
-        return Canvas.remove(self.doll);
+
+        // Remove image
+        Canvas.remove(self.doll);
+
+        // Create new piece
+        var piece = new Piece(board, self.row, self.column);
+        board.pieces[self.row][self.column] = piece;
+        Canvas.add(piece.getDoll());
     };
 };
 
@@ -320,8 +323,6 @@ var Board = function(width, height, tileSize) {
                 }
             }
         }
-
-        console.log(repeatedPieces);
 
         // Eliminate pieces
         for (var k in repeatedPieces) {
