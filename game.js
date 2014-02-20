@@ -1,12 +1,15 @@
 window._tileSize = 48;
 window._horizontalTiles = 15;
 window._verticalTiles = 10;
+window._pointerHeight = 60;
 
 var Canvas = this.__canvas = new fabric.Canvas(
     'canvas',
     {
         hoverCursor: 'pointer',
-        selection: false
+        selection: false,
+        width: (window._horizontalTiles * window._tileSize) + 1,
+        height: (window._verticalTiles * window._tileSize) + 1 + window._pointerHeight
     }
 );
 
@@ -25,12 +28,45 @@ var Logger = {
     }
 };
 
+var Pointer = function() {
+
+    var self = this;
+
+    this.movements = 0;
+    this.piecesDestroyed = 0;
+
+    var createDoll = function()
+    {
+        return new fabric.Text(
+            self.piecesDestroyed + ' pieces ' + self.movements + ' movements',
+            {
+                left: (window._horizontalTiles * window._tileSize) / 2,
+                top: (window._verticalTiles * window._tileSize) + 1,
+                textAlign: 'center',
+                originX: 'center',
+                fontFamily: 'Arial'
+            }
+        );
+    };
+
+    this.update = function() {
+        if (self.doll) {
+            Canvas.remove(self.doll);
+        }
+        self.doll = createDoll();
+        Canvas.add(self.doll);
+    };
+
+    this.update();
+};
+
 var Game = function() {
 
     var tileSize = window._tileSize;
     var horizontalTiles = window._horizontalTiles;
     var verticalTiles = window._verticalTiles;
-    var board = new Board(horizontalTiles, verticalTiles, tileSize);
+    var board = new Board(this, horizontalTiles, verticalTiles, tileSize);
+    var pointer = new Pointer();
 
     var currentPiece = null;
 
@@ -39,14 +75,18 @@ var Game = function() {
     document.getElementById('container').style.width = (horizontalTiles * tileSize) + 1 + 'px';
     document.getElementById('container').style.height = (verticalTiles * tileSize) + 1 + 'px';
 
-    Canvas.setDimensions({
-        width: (horizontalTiles * tileSize) + 1,
-        height: (verticalTiles * tileSize) + 1
-    });
+    // Canvas.setDimensions({
+    //     width: (horizontalTiles * tileSize) + 1,
+    //     height: (verticalTiles * tileSize) + 1
+    // });
 
     this.getBoard = function() {
         return board;
-    }
+    };
+
+    this.getPointer = function() {
+        return pointer;
+    };
 
     this.setCurrentPiece = function(row, column) {
         currentPiece = self.getBoard().getPiece(row, column);
@@ -70,8 +110,13 @@ var Game = function() {
             },
             'mouse:up': function(options) {
 
-                var board = self.getBoard();
                 var movedPiece = self.getCurrentPiece();
+
+                if (!movedPiece) {
+                    return false;
+                }
+
+                var board = self.getBoard();
 
                 var oldRow = movedPiece.getRow();
                 var oldColumn = movedPiece.getColumn();
@@ -127,6 +172,9 @@ var Game = function() {
                 board.move(movedPiece, replacedPiece);
 
                 board.removeMatches();
+
+                pointer.movements++;
+                pointer.update();
 
                 // Play sound
                 Sound.playMove();
@@ -203,7 +251,7 @@ var Piece = function(_board, _row, _column) {
     };
 };
 
-var Board = function(width, height, tileSize) {
+var Board = function(game, width, height, tileSize) {
     this.width = width;
     this.height = height;
     this.tileSize = tileSize;
@@ -247,7 +295,12 @@ var Board = function(width, height, tileSize) {
     }
 
     this.getPiece = function(row, column) {
-        return self.pieces[row][column];
+
+        if (self.pieces[row] !== undefined && self.pieces[row][column] !== undefined) {
+            return self.pieces[row][column];
+        }
+
+        return false;
     };
 
     this.getRowAt = function(top) {
@@ -325,9 +378,14 @@ var Board = function(width, height, tileSize) {
         }
 
         // Eliminate pieces
+        var removedPieces = 0;
         for (var k in repeatedPieces) {
             repeatedPieces[k].destroy();
+            removedPieces++;
         }
+
+        game.getPointer().piecesDestroyed += removedPieces;
+        game.getPointer().update();
     };
 
     this.move = function(piece1, piece2) {
