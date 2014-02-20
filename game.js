@@ -168,7 +168,7 @@ var Game = function() {
 
                 if (board.getMatches().length > 0) {
 
-                    board.removeMatches();
+                    board.animateRemoveMatches();
 
                     pointer.movements++;
                     pointer.update();
@@ -387,7 +387,7 @@ var Board = function(game, width, height, tileSize) {
         return pieces;
     };
 
-    this.removeMatches = function() {
+    this.animateRemoveMatches = function() {
 
         var repeatedPieces = self.getMatches();
 
@@ -399,6 +399,17 @@ var Board = function(game, width, height, tileSize) {
 
         game.getPointer().piecesDestroyed += removedPieces;
         game.getPointer().update();
+    };
+
+    this.removeMatches = function() {
+
+        var repeatedPieces = self.getMatches();
+
+        for (var k in repeatedPieces) {
+            repeatedPieces[k].destroy();
+        }
+
+        return repeatedPieces.length;
     };
 
     this.move = function(piece1, piece2) {
@@ -434,6 +445,11 @@ var Board = function(game, width, height, tileSize) {
             return true;
         }
     };
+
+    // Load without repeated pieces
+    while (self.getMatches().length > 0) {
+        self.removeMatches();
+    }
 };
 
 new Game();
