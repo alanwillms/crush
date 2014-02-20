@@ -264,12 +264,14 @@ var Board = function(width, height, tileSize) {
     };
 
     this.removeMatches = function() {
+
+        var repeatedPieces = {};
+
         // Horizontal matches
         for (var row in self.pieces) {
 
-            var previousColor;
+            var previousColor = null;
             var repeatedColor = 1;
-            var repeatedPieces = [];
 
             for (var column in self.pieces[row]) {
 
@@ -283,18 +285,47 @@ var Board = function(width, height, tileSize) {
                 }
 
                 if (repeatedColor > 3) {
-                    repeatedPieces.push(current);
+                    repeatedPieces[row + ':' + column] = current;
                 } else if (repeatedColor == 3) {
-                    repeatedPieces.push(current);
-                    repeatedPieces.push(self.pieces[row][column-1]);
-                    repeatedPieces.push(self.pieces[row][column-2]);
+                    repeatedPieces[row + ':' + column] = current;
+                    repeatedPieces[row + ':' + (column-1)] = self.pieces[row][column-1];
+                    repeatedPieces[row + ':' + (column-2)] = self.pieces[row][column-2];
                 }
             }
+        }
 
-            // Eliminate pieces
-            for (var k in repeatedPieces) {
-                repeatedPieces[k].destroy();
+        // Vertical matches
+        for (var column = 0; column < window._horizontalTiles; column++) {
+
+            var previousColor = null;
+            var repeatedColor = 1;
+
+            for (var row = 0; row < window._verticalTiles; row++) {
+
+                var current = self.pieces[row][column];
+
+                if (previousColor === current.color) {
+                    repeatedColor++;
+                } else {
+                    repeatedColor = 1;
+                    previousColor = current.color;
+                }
+
+                if (repeatedColor > 3) {
+                    repeatedPieces[row + ':' + column] = current;
+                } else if (repeatedColor == 3) {
+                    repeatedPieces[row + ':' + column] = current;
+                    repeatedPieces[(row-1) + ':' + column] = self.pieces[row-1][column];
+                    repeatedPieces[(row-2) + ':' + column] = self.pieces[row-2][column];
+                }
             }
+        }
+
+        console.log(repeatedPieces);
+
+        // Eliminate pieces
+        for (var k in repeatedPieces) {
+            repeatedPieces[k].destroy();
         }
     };
 
