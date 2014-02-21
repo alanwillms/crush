@@ -13,6 +13,29 @@ var Canvas = this.__canvas = new fabric.Canvas(
     }
 );
 
+// fabric.Sprite.fromURL(
+//     'explosion.png',
+//     function(sprite) {
+//         sprite.set({
+//             left: 0,
+//             top: 0,
+//             width: 48,
+//             height: 48
+//         });
+//         Canvas.add(sprite);
+//         sprite.play();
+
+//         (function render() {
+//             Canvas.renderAll();
+//             fabric.util.requestAnimFrame(render);
+//         })();
+//     },
+//     {
+//         spriteWidth: 48,
+//         spriteHeight: 48
+//     }
+// );
+
 var Sound = {
     playMove: function() {
         var sound = new Audio('move.wav');
@@ -239,22 +262,17 @@ var Piece = function(_board, _row, _column) {
                 onComplete: callback
             }
         );
-
-        // self.getDoll().set({
-        //     left: 1 + (newColumn * window._tileSize),
-        //     top: 1 + (newRow * window._tileSize)
-        // });
     };
 
     this.getDoll = function() {
         return self.doll;
     };
 
-    this.destroy = function() {
+    this.getUpperPiece = function() {
+        return board.getPiece(self.row - 1, self.column);
+    };
 
-
-        // @TODO play sound and explosion animation
-        // @TODO drop new pieces
+    this.regenerate = function() {
 
         // Remove image
         Canvas.remove(self.doll);
@@ -263,6 +281,15 @@ var Piece = function(_board, _row, _column) {
         var piece = new Piece(board, self.row, self.column);
         board.pieces[self.row][self.column] = piece;
         Canvas.add(piece.getDoll());
+    };
+
+    this.animateDestroy = function() {
+
+        // @TODO play sound and explosion animation
+        // Remove image
+        Canvas.remove(self.doll);
+
+        board.pieces[self.row][self.column] = null;
     };
 };
 
@@ -401,18 +428,74 @@ var Board = function(game, width, height, tileSize) {
         return pieces;
     };
 
+    this.hasEmptyCells = function() {
+        var empty = 0;
+        for (var column = 0; column < window._horizontalTiles; column++) {
+            for (var row = 0; row < window._verticalTiles; row++) {
+                if (self.pieces[row][column] == null) {
+                    empty++;
+                }
+            }
+        }
+        return empty;
+    };
+
+    this.dropPieces = function() {
+
+        for (var column = 0; column < window._horizontalTiles; column++) {
+
+            for (var row = (window._verticalTiles - 1); row >= 0; row--) {
+
+                var piece = self.pieces[row][column];
+
+                if (piece == null) {
+
+                    // Firt row creates new pieces
+                    if (row == 0) {
+
+                        piece = new Piece(self, row, column);
+                        self.pieces[row][column] = piece;
+
+                        Canvas.add(piece.getDoll());
+                        piece.getDoll().setTop(-window._tileSize);
+                        piece.move(row, column);
+
+                    } else {
+
+                        var upper = self.getPiece(row - 1, column);
+
+                        if (upper) {
+
+                            upper.move(row, column);
+
+                            self.pieces[row - 1][column] = null;
+                            self.pieces[row][column] = upper;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     this.animateRemoveMatches = function() {
 
         var repeatedPieces = self.getMatches();
 
         var removedPieces = 0;
+
         for (var k in repeatedPieces) {
-            repeatedPieces[k].destroy();
+
+            repeatedPieces[k].animateDestroy();
             removedPieces++;
         }
 
         game.getPointer().piecesDestroyed += removedPieces;
         game.getPointer().update();
+
+        // Drop pieces
+        while (self.hasEmptyCells()) {
+            self.dropPieces();
+        }
 
         while (self.getMatches().length > 0) {
             self.animateRemoveMatches();
@@ -424,7 +507,8 @@ var Board = function(game, width, height, tileSize) {
         var repeatedPieces = self.getMatches();
 
         for (var k in repeatedPieces) {
-            repeatedPieces[k].destroy();
+            repeatedPieces[k].regenerate();
+
         }
 
         return repeatedPieces.length;
