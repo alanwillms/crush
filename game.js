@@ -2,6 +2,7 @@ window._tileSize = 48;
 window._horizontalTiles = 15;
 window._verticalTiles = 10;
 window._pointerHeight = 60;
+window._piecesImages = {};
 
 var Canvas = this.__canvas = new fabric.Canvas(
     'canvas',
@@ -213,12 +214,12 @@ var Piece = function(_board, _row, _column) {
     var self = this;
 
     var types = {
-        1: '#FF0000', // vermelho
-        2: '#0000FF', // azul
-        3: '#00FF00', // verde
-        4: '#FFFF00', // amarelo
-        5: '#FFCC00', // laranja
-        6: '#FF00FF', // roxo
+        1: 'pieces/01.png',
+        2: 'pieces/02.png',
+        3: 'pieces/03.png',
+        4: 'pieces/04.png',
+        5: 'pieces/05.png',
+        6: 'pieces/06.png',
     };
 
     this.type = Math.floor(Math.random() * 6) + 1;
@@ -229,13 +230,22 @@ var Piece = function(_board, _row, _column) {
     this.row = _row;
     this.column = _column;
     this.locked = false;
-    this.doll = self.doll = new fabric.Circle({
-        top: (self.row * board.tileSize) + 1,
-        left: (self.column * board.tileSize) + 1,
-        radius: (board.tileSize/2) - 1,
-        fill: color,
-        selectable: false
-    });
+    // this.doll = self.doll = new fabric.Circle({
+    //     top: (self.row * board.tileSize) + 1,
+    //     left: (self.column * board.tileSize) + 1,
+    //     radius: (board.tileSize/2) - 1,
+    //     fill: color,
+    //     selectable: false
+    // });
+
+    self.doll = new fabric.Image(
+        window._piecesImages[self.type],
+        {
+            top: (self.row * board.tileSize) + 1,
+            left: (self.column * board.tileSize) + 1,
+            selectable: false
+        }
+    );
 
     this.getRow = function() {
         return self.row;
@@ -554,4 +564,48 @@ var Board = function(game, width, height, tileSize) {
     }
 };
 
-new Game();
+
+
+fabric.Image.fromURL(
+    'pieces/01.png',
+    function(sprite) {
+        window._piecesImages[1] = sprite.getElement();
+
+        fabric.Image.fromURL(
+            'pieces/02.png',
+            function(sprite) {
+                window._piecesImages[2] = sprite.getElement();
+
+                fabric.Image.fromURL(
+                    'pieces/03.png',
+                    function(sprite) {
+                        window._piecesImages[3] = sprite.getElement();
+
+                        fabric.Image.fromURL(
+                            'pieces/04.png',
+                            function(sprite) {
+                                window._piecesImages[4] = sprite.getElement();
+
+                                fabric.Image.fromURL(
+                                    'pieces/05.png',
+                                    function(sprite) {
+                                        window._piecesImages[5] = sprite.getElement();
+
+                                        fabric.Image.fromURL(
+                                            'pieces/06.png',
+                                            function(sprite) {
+                                                window._piecesImages[6] = sprite.getElement();
+
+                                                new Game();
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    }
+);
