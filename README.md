@@ -1,5 +1,4 @@
-Crush
-=====
+# Crush
 
 A simple game made with FabricJS, similar to Bejeweled and Candy Crush.
 
