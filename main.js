@@ -1,6 +1,7 @@
 import "./style.css";
 
 import { fabric } from "fabric";
+import Pointer from "./src/pointer";
 
 window._tileSize = 48;
 window._horizontalTiles = 15;
@@ -88,7 +89,7 @@ fabric.Sprite.fromURL = function (url, callback, imgOptions) {
 
 fabric.Sprite.async = true;
 
-var Canvas = new fabric.Canvas("canvas", {
+const canvas = new fabric.Canvas("canvas", {
   hoverCursor: "pointer",
   selection: false,
   width: window._horizontalTiles * window._tileSize + 1,
@@ -110,42 +111,12 @@ var Logger = {
   },
 };
 
-var Pointer = function () {
-  var self = this;
-
-  this.movements = 0;
-  this.piecesDestroyed = 0;
-
-  var createDoll = function () {
-    return new fabric.Text(
-      self.piecesDestroyed + " pieces " + self.movements + " movements",
-      {
-        left: (window._horizontalTiles * window._tileSize) / 2,
-        top: window._verticalTiles * window._tileSize + 1,
-        textAlign: "center",
-        originX: "center",
-        fontFamily: "Arial",
-      }
-    );
-  };
-
-  this.update = function () {
-    if (self.doll) {
-      Canvas.remove(self.doll);
-    }
-    self.doll = createDoll();
-    Canvas.add(self.doll);
-  };
-
-  this.update();
-};
-
 var Game = function () {
   var tileSize = window._tileSize;
   var horizontalTiles = window._horizontalTiles;
   var verticalTiles = window._verticalTiles;
   var board = new Board(this, horizontalTiles, verticalTiles, tileSize);
-  var pointer = new Pointer();
+  var pointer = new Pointer(canvas);
 
   var currentPiece = null;
 
@@ -172,7 +143,7 @@ var Game = function () {
     return currentPiece;
   };
 
-  Canvas.on({
+  canvas.on({
     "mouse:down": function (options) {
       window._mouseBeginningX = options.e.offsetX;
       window._mouseBeginningY = options.e.offsetY;
@@ -278,13 +249,6 @@ var Piece = function (_board, _row, _column) {
   this.row = _row;
   this.column = _column;
   this.locked = false;
-  // this.doll = self.doll = new fabric.Circle({
-  //     top: (self.row * board.tileSize) + 1,
-  //     left: (self.column * board.tileSize) + 1,
-  //     radius: (board.tileSize/2) - 1,
-  //     fill: color,
-  //     selectable: false
-  // });
 
   self.doll = new fabric.Image(window._piecesImages[self.type], {
     top: self.row * board.tileSize + 1,
@@ -312,7 +276,7 @@ var Piece = function (_board, _row, _column) {
       },
       {
         duration: 250,
-        onChange: Canvas.renderAll.bind(Canvas),
+        onChange: canvas.renderAll.bind(canvas),
         onComplete: callback,
       }
     );
@@ -328,18 +292,18 @@ var Piece = function (_board, _row, _column) {
 
   this.regenerate = function () {
     // Remove image
-    Canvas.remove(self.doll);
+    canvas.remove(self.doll);
 
     // Create new piece
     var piece = new Piece(board, self.row, self.column);
     board.pieces[self.row][self.column] = piece;
-    Canvas.add(piece.getDoll());
+    canvas.add(piece.getDoll());
   };
 
   this.animateDestroy = function () {
     // @TODO play sound and explosion animation
     // Remove image
-    Canvas.remove(self.doll);
+    canvas.remove(self.doll);
 
     board.pieces[self.row][self.column] = null;
   };
@@ -365,7 +329,7 @@ var Board = function (game, width, height, tileSize) {
       // Add piece
       rowPieces.push(piece);
 
-      Canvas.add(
+      canvas.add(
         // Draw cell
         new fabric.Rect({
           top: top,
@@ -378,7 +342,7 @@ var Board = function (game, width, height, tileSize) {
         })
       );
 
-      Canvas.add(
+      canvas.add(
         // Draw piece
         piece.getDoll()
       );
@@ -504,7 +468,7 @@ var Board = function (game, width, height, tileSize) {
             const doll = piece.getDoll();
 
             if (doll) {
-              Canvas.add(doll);
+              canvas.add(doll);
               doll.set("top", -window._tileSize);
             }
             piece.move(row, column);
