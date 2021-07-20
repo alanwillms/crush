@@ -5,7 +5,7 @@ import Sound from "./sound";
 import Piece from "./piece";
 
 export default class Game {
-  private board;
+  private board: Board;
   private currentPiece: Piece;
   private pointer: Pointer;
 
@@ -98,20 +98,22 @@ export default class Game {
 
       var replacedPiece = this.getBoard().getPiece(newRow, newColumn);
 
-      board.move(movedPiece, replacedPiece, () => {
-        if (board.getMatches().length > 0) {
-          board.animateRemoveMatches();
+      if (replacedPiece) {
+        this.board.move(movedPiece, replacedPiece, () => {
+          if (this.board.getMatches().length > 0) {
+            this.board.animateRemoveMatches();
 
-          this.pointer.increaseMovements();
-          this.pointer.update();
+            this.pointer.increaseMovements();
+            this.pointer.update();
 
-          // Play sound
-          Sound.playMove();
-        } else {
-          // Move back
-          board.move(replacedPiece, movedPiece);
-        }
-      });
+            // Play sound
+            Sound.playMove();
+          } else {
+            // Move back
+            this.board.move(replacedPiece as Piece, movedPiece);
+          }
+        });
+      }
     });
   }
 
@@ -124,7 +126,7 @@ export default class Game {
   }
 
   setCurrentPiece(row: number, column: number) {
-    this.currentPiece = this.getBoard().getPiece(row, column);
+    this.currentPiece = this.getBoard().getPiece(row, column) as Piece;
   }
 
   getCurrentPiece() {

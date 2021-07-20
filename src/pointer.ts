@@ -15,6 +15,10 @@ export default class Pointer {
     this.movements += 1;
   }
 
+  sumDestroyedPieces(pieces) {
+    this.piecesDestroyed += pieces;
+  }
+
   update() {
     if (this.doll) {
       this.canvas.remove(this.doll);

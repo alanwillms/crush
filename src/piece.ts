@@ -1,4 +1,5 @@
 import { fabric } from "fabric";
+import Board from "./board";
 
 const types = {
   1: "pieces/01.png",
@@ -17,16 +18,16 @@ export default class Piece {
 
   constructor(
     private readonly canvas: fabric.Canvas,
-    private readonly board,
-    private row: number,
-    private column: number
+    private readonly board: Board,
+    public row: number,
+    public column: number
   ) {
     this.type = Math.floor(Math.random() * 6) + 1;
     this.color = types[this.type];
     this.locked = false;
     this.doll = new fabric.Image((window as any)._piecesImages[this.type], {
-      top: this.row * board.tileSize + 1,
-      left: this.column * board.tileSize + 1,
+      top: this.row * this.board.tileSize + 1,
+      left: this.column * this.board.tileSize + 1,
       selectable: false,
     });
   }
@@ -39,7 +40,7 @@ export default class Piece {
     return this.column;
   }
 
-  move(newRow: number, newColumn: number, callback: Function) {
+  move(newRow: number, newColumn: number, callback?: Function) {
     this.getDoll().bringToFront();
     this.row = newRow;
     this.column = newColumn;
