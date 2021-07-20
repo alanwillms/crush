@@ -11,6 +11,10 @@ export default class Pointer {
     this.update();
   }
 
+  increaseMovements() {
+    this.movements += 1;
+  }
+
   update() {
     if (this.doll) {
       this.canvas.remove(this.doll);
