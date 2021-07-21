@@ -4,6 +4,8 @@ import Game from "./game";
 
 export default class Board {
   pieces: Piece[][];
+  private locked = false;
+
   constructor(
     private readonly canvas: fabric.Canvas,
     private readonly game: Game,
@@ -11,6 +13,26 @@ export default class Board {
     private readonly height: number,
     public readonly tileSize: number
   ) {
+    this.fillBoard();
+
+    while (this.hasMatches()) {
+      this.removeMatches();
+    }
+  }
+
+  isLocked() {
+    return this.locked;
+  }
+
+  lock() {
+    this.locked = true;
+  }
+
+  unlock() {
+    this.locked = false;
+  }
+
+  private fillBoard() {
     this.pieces = [];
 
     for (let row = 0; row < this.height; row++) {
@@ -43,11 +65,6 @@ export default class Board {
       }
 
       this.pieces.push(rowPieces);
-    }
-
-    // Load without repeated pieces
-    while (this.getMatches().length > 0) {
-      this.removeMatches();
     }
   }
 
@@ -154,13 +171,17 @@ export default class Board {
     return empty;
   }
 
-  dropPieces() {
+  hasMatches() {
+    return this.getMatches().length > 0;
+  }
+
+  async dropPieces() {
     for (var column = 0; column < (window as any)._horizontalTiles; column++) {
       for (var row = (window as any)._verticalTiles - 1; row >= 0; row--) {
         var piece = this.pieces[row][column];
 
         if (piece == null) {
-          // Firt row creates new pieces
+          // First row creates new pieces
           if (row == 0) {
             piece = new Piece(this.canvas, this, row, column);
             this.pieces[row][column] = piece;
@@ -171,12 +192,12 @@ export default class Board {
               this.canvas.add(doll);
               doll.set("top", -(window as any)._tileSize);
             }
-            piece.move(row, column);
+            await piece.move(row, column);
           } else {
             var upper = this.getPiece(row - 1, column);
 
             if (upper) {
-              upper.move(row, column);
+              await upper.move(row, column);
 
               this.pieces[row - 1][column] = null;
               this.pieces[row][column] = upper;
@@ -187,7 +208,7 @@ export default class Board {
     }
   }
 
-  animateRemoveMatches() {
+  async animateRemoveMatches() {
     var repeatedPieces = this.getMatches();
 
     var removedPieces = 0;
@@ -202,11 +223,11 @@ export default class Board {
 
     // Drop pieces
     while (this.hasEmptyCells()) {
-      this.dropPieces();
+      await this.dropPieces();
     }
 
-    while (this.getMatches().length > 0) {
-      this.animateRemoveMatches();
+    while (this.hasMatches()) {
+      await this.animateRemoveMatches();
     }
   }
 
@@ -220,7 +241,7 @@ export default class Board {
     return repeatedPieces.length;
   }
 
-  move(piece1: Piece, piece2: Piece, callback?: Function) {
+  async swap(piece1: Piece, piece2: Piece) {
     var oldRow = piece1.row;
     var oldColumn = piece1.column;
 
@@ -230,11 +251,13 @@ export default class Board {
     this.pieces[oldRow][oldColumn] = piece2;
     this.pieces[newRow][newColumn] = piece1;
 
-    piece1.move(newRow, newColumn);
-    piece2.move(oldRow, oldColumn, callback);
+    await Promise.all([
+      piece1.move(newRow, newColumn),
+      piece2.move(oldRow, oldColumn),
+    ]);
   }
 
-  checkPosition(newRow, newColumn) {
+  isInsideBoard(newRow, newColumn) {
     var firstRow = 0;
     var firstColumn = 0;
     var lastRow = this.getLastRow();

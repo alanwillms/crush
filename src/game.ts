@@ -23,8 +23,6 @@ export default class Game {
     );
     this.pointer = new Pointer(this.canvas);
 
-    var currentPiece = null;
-
     document.getElementById("app").style.width =
       horizontalTiles * tileSize + 1 + "px";
     document.getElementById("app").style.height =
@@ -40,7 +38,7 @@ export default class Game {
       );
     });
 
-    this.canvas.on("mouse:up", (options) => {
+    this.canvas.on("mouse:up", async (options) => {
       var movedPiece = this.getCurrentPiece();
 
       if (!movedPiece) {
@@ -49,16 +47,18 @@ export default class Game {
 
       var board = this.getBoard();
 
+      if (board.isLocked()) {
+        return false;
+      }
+
       var oldRow = movedPiece.getRow();
       var oldColumn = movedPiece.getColumn();
 
       var mouseRow = board.getRowAt((options.e as any).offsetY);
       var mouseColumn = board.getColumnAt((options.e as any).offsetX);
 
-      // Moved outside board
-      if (!board.checkPosition(mouseRow, mouseColumn)) {
+      if (!board.isInsideBoard(mouseRow, mouseColumn)) {
         return false;
-        // @TODO play "failure" sound
       }
 
       // Moved mouse outside initial place
@@ -81,15 +81,8 @@ export default class Game {
         newColumn--;
       }
 
-      // If it explodes the board limit, does nothing
-      var firstRow = 0;
-      var firstColumn = 0;
-      var lastRow = board.getLastRow();
-      var lastColumn = board.getLastColumn();
-
-      if (!board.checkPosition(newRow, newColumn)) {
+      if (!board.isInsideBoard(newRow, newColumn)) {
         return false;
-        // @TODO play "failure" sound
       }
 
       if (newRow == oldRow && newColumn == oldColumn) {
@@ -98,22 +91,29 @@ export default class Game {
 
       var replacedPiece = this.getBoard().getPiece(newRow, newColumn);
 
-      if (replacedPiece) {
-        this.board.move(movedPiece, replacedPiece, () => {
-          if (this.board.getMatches().length > 0) {
-            this.board.animateRemoveMatches();
-
-            this.pointer.increaseMovements();
-            this.pointer.update();
-
-            // Play sound
-            Sound.playMove();
-          } else {
-            // Move back
-            this.board.move(replacedPiece as Piece, movedPiece);
-          }
-        });
+      if (!replacedPiece) {
+        return false;
       }
+
+      board.lock();
+      await board.swap(movedPiece, replacedPiece);
+
+      if (!board.hasMatches()) {
+        // Move back
+        await this.board.swap(replacedPiece as Piece, movedPiece);
+        board.unlock();
+        return false;
+      }
+
+      await board.animateRemoveMatches();
+
+      board.unlock();
+
+      this.pointer.increaseMovements();
+      this.pointer.update();
+
+      // Play sound
+      Sound.playMove();
     });
   }
 

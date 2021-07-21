@@ -30,23 +30,25 @@ export default class Piece {
     return this.column;
   }
 
-  move(newRow: number, newColumn: number, callback?: Function) {
-    this.row = newRow;
-    this.column = newColumn;
+  move(newRow: number, newColumn: number) {
+    return new Promise((resolve, reject) => {
+      this.row = newRow;
+      this.column = newColumn;
 
-    this.getDoll()
-      .bringToFront()
-      .animate(
-        {
-          left: 1 + newColumn * (window as any)._tileSize,
-          top: 1 + newRow * (window as any)._tileSize,
-        },
-        {
-          duration: 250,
-          onChange: this.canvas.renderAll.bind(this.canvas),
-          onComplete: callback,
-        }
-      );
+      this.getDoll()
+        .bringToFront()
+        .animate(
+          {
+            left: 1 + newColumn * (window as any)._tileSize,
+            top: 1 + newRow * (window as any)._tileSize,
+          },
+          {
+            duration: 250,
+            onChange: this.canvas.renderAll.bind(this.canvas),
+            onComplete: resolve,
+          }
+        );
+    });
   }
 
   getDoll() {
