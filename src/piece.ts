@@ -1,19 +1,10 @@
 import { fabric } from "fabric";
 import Board from "./board";
-
-const types = {
-  1: "pieces/01.png",
-  2: "pieces/02.png",
-  3: "pieces/03.png",
-  4: "pieces/04.png",
-  5: "pieces/05.png",
-  6: "pieces/06.png",
-};
+import types from "./piece-types";
 
 export default class Piece {
   type: number;
   color: string;
-  locked: boolean;
   doll: fabric.Image;
 
   constructor(
@@ -24,7 +15,6 @@ export default class Piece {
   ) {
     this.type = Math.floor(Math.random() * 6) + 1;
     this.color = types[this.type];
-    this.locked = false;
     this.doll = new fabric.Image((window as any)._piecesImages[this.type], {
       top: this.row * this.board.tileSize + 1,
       left: this.column * this.board.tileSize + 1,
@@ -41,21 +31,22 @@ export default class Piece {
   }
 
   move(newRow: number, newColumn: number, callback?: Function) {
-    this.getDoll().bringToFront();
     this.row = newRow;
     this.column = newColumn;
 
-    this.getDoll().animate(
-      {
-        left: 1 + newColumn * (window as any)._tileSize,
-        top: 1 + newRow * (window as any)._tileSize,
-      },
-      {
-        duration: 250,
-        onChange: this.canvas.renderAll.bind(this.canvas),
-        onComplete: callback,
-      }
-    );
+    this.getDoll()
+      .bringToFront()
+      .animate(
+        {
+          left: 1 + newColumn * (window as any)._tileSize,
+          top: 1 + newRow * (window as any)._tileSize,
+        },
+        {
+          duration: 250,
+          onChange: this.canvas.renderAll.bind(this.canvas),
+          onComplete: callback,
+        }
+      );
   }
 
   getDoll() {

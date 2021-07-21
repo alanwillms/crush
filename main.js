@@ -2,10 +2,11 @@ import "./style.css";
 
 import { fabric } from "fabric";
 import Game from "./src/game";
+import pieceTypes from "./src/piece-types";
 
 window._tileSize = 48;
-window._horizontalTiles = 15;
-window._verticalTiles = 10;
+window._horizontalTiles = 9;
+window._verticalTiles = 9;
 window._pointerHeight = 60;
 window._piecesImages = {};
 
@@ -96,28 +97,17 @@ const canvas = new fabric.Canvas("canvas", {
   height: window._verticalTiles * window._tileSize + 1 + window._pointerHeight,
 });
 
-fabric.Image.fromURL("pieces/01.png", function (sprite) {
-  window._piecesImages[1] = sprite.getElement();
+const loadNextPieceImageOrStartGame = (index) => {
+  const url = pieceTypes[index];
 
-  fabric.Image.fromURL("pieces/02.png", function (sprite) {
-    window._piecesImages[2] = sprite.getElement();
+  if (!url) {
+    return new Game(canvas);
+  }
 
-    fabric.Image.fromURL("pieces/03.png", function (sprite) {
-      window._piecesImages[3] = sprite.getElement();
-
-      fabric.Image.fromURL("pieces/04.png", function (sprite) {
-        window._piecesImages[4] = sprite.getElement();
-
-        fabric.Image.fromURL("pieces/05.png", function (sprite) {
-          window._piecesImages[5] = sprite.getElement();
-
-          fabric.Image.fromURL("pieces/06.png", function (sprite) {
-            window._piecesImages[6] = sprite.getElement();
-
-            new Game(canvas);
-          });
-        });
-      });
-    });
+  fabric.Image.fromURL(url, (sprite) => {
+    window._piecesImages[index] = sprite.getElement();
+    loadNextPieceImageOrStartGame(index + 1);
   });
-});
+};
+
+loadNextPieceImageOrStartGame(1);

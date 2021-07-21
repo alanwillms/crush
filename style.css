@@ -1,27 +1,27 @@
 #app {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-align: center;
-    color: #2c3e50;
-    margin-top: 60px;
-  }
-  
-  body {
-    background: url(pattern.png);
-    color: #000;
-    font: 16px/1.5em Helvetica,Arial,sans-serif;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-  }
-  
-  h1 {
-    font-size: 24px;
-    text-align: center;
-  }
-  
-  #container {
-    margin: 20px auto 0;
-  }
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin: 60px auto;
+}
+
+body {
+  background: url(pattern.png);
+  color: #000;
+  font: 16px/1.5em Helvetica,Arial,sans-serif;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+h1 {
+  font-size: 24px;
+  text-align: center;
+}
+
+#container {
+  margin: 20px auto 0;
+}
