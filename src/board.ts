@@ -2,6 +2,28 @@ import { fabric } from "fabric";
 import Piece from "./piece";
 import Game from "./game";
 
+const transpose = (matrix) =>
+  matrix.reduce(($, row) => row.map((_, i) => [...($[i] || []), row[i]]), []);
+
+const toColor = (board) => {
+  console.log(
+    board
+      .map((row) =>
+        row
+          .map((piece) => piece?.type || "x")
+          .join("")
+          .replace(/1/g, "🟦")
+          .replace(/2/g, "🟪")
+          .replace(/3/g, "🟩")
+          .replace(/4/g, "🟨")
+          .replace(/5/g, "🟥")
+          .replace(/6/g, "🟧")
+          .replace(/x/g, "⬛️")
+      )
+      .join("\n")
+  );
+};
+
 export default class Board {
   pieces: Piece[][];
   private locked = false;
@@ -176,36 +198,77 @@ export default class Board {
   }
 
   async dropPieces() {
-    for (var column = 0; column < (window as any)._horizontalTiles; column++) {
-      for (var row = (window as any)._verticalTiles - 1; row >= 0; row--) {
-        var piece = this.pieces[row][column];
+    const animations = [];
+    const updatedBoard = [];
 
-        if (piece == null) {
-          // First row creates new pieces
-          if (row == 0) {
-            piece = new Piece(this.canvas, this, row, column);
-            this.pieces[row][column] = piece;
+    this.pieces.forEach((rowData, row) => {
+      updatedBoard.push([]);
+      rowData.forEach((piece, column) => {
+        updatedBoard[row][column] = piece;
+      });
+    });
 
-            const doll = piece.getDoll();
+    const transposed = transpose(updatedBoard).map((row) =>
+      row.filter((value) => value !== null && value !== undefined)
+    );
 
-            if (doll) {
-              this.canvas.add(doll);
-              doll.set("top", -(window as any)._tileSize);
-            }
-            await piece.move(row, column);
-          } else {
-            var upper = this.getPiece(row - 1, column);
+    console.log("original");
+    toColor(updatedBoard);
 
-            if (upper) {
-              await upper.move(row, column);
+    console.log("transposed");
+    toColor(transposed);
 
-              this.pieces[row - 1][column] = null;
-              this.pieces[row][column] = upper;
-            }
-          }
-        }
+    for (const row in transposed) {
+      const transposedRow = transposed[row];
+      while (transposedRow.length < (window as any)._verticalTiles) {
+        // here row acts as column, because of transposition
+        const piece = new Piece(this.canvas, this, -1, row as any);
+        const doll = piece.getDoll();
+        this.canvas.add(doll);
+        doll.set(
+          "top",
+          -1 *
+            (window as any)._tileSize *
+            ((window as any)._verticalTiles - transposedRow.length + 1)
+        );
+        (transposedRow as Piece[]).unshift(piece);
       }
     }
+
+    const untransposed = transpose(transposed);
+    console.log("untransposed");
+    toColor(untransposed);
+
+    const movements = {};
+
+    untransposed.forEach((data, row) => {
+      data.forEach((piece, column) => {
+        if (piece.row != row || piece.column != column) {
+          movements[piece.id] = [piece, row, column];
+        }
+      });
+    });
+
+    toColor(updatedBoard);
+
+    // Animations
+    for (const [key, value] of Object.entries(movements)) {
+      const [piece, row, column] = value as any;
+      animations.push(piece.move(row, column));
+    }
+
+    await Promise.all(animations);
+
+    for (const [key, value] of Object.entries(movements)) {
+      const [piece, row, column] = value as any;
+      updatedBoard[row][column] = piece;
+    }
+
+    updatedBoard.forEach((rowData, row) => {
+      rowData.forEach((piece, column) => {
+        this.pieces[row][column] = piece;
+      });
+    });
   }
 
   async animateRemoveMatches() {

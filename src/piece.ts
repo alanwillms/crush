@@ -1,11 +1,14 @@
 import { fabric } from "fabric";
 import Board from "./board";
 import types from "./piece-types";
+import { v4 as uuid } from "uuid";
 
 export default class Piece {
   type: number;
   color: string;
   doll: fabric.Image;
+
+  public readonly id: string;
 
   constructor(
     private readonly canvas: fabric.Canvas,
@@ -13,6 +16,7 @@ export default class Piece {
     public row: number,
     public column: number
   ) {
+    this.id = uuid();
     this.type = Math.floor(Math.random() * 6) + 1;
     this.color = types[this.type];
     this.doll = new fabric.Image((window as any)._piecesImages[this.type], {
@@ -43,7 +47,7 @@ export default class Piece {
             top: 1 + newRow * (window as any)._tileSize,
           },
           {
-            duration: 250,
+            duration: 500,
             onChange: this.canvas.renderAll.bind(this.canvas),
             onComplete: resolve,
           }
