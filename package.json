@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "@types/fabric": "^4.5.1",
-    "vite": "^2.9.18"
+    "vite": "^4.5.13"
   },
   "dependencies": {
     "fabric": "^4.5.1"
