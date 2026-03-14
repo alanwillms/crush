@@ -23,6 +23,8 @@ export default class Piece {
       top: this.row * this.board.tileSize + 1,
       left: this.column * this.board.tileSize + 1,
       selectable: false,
+      originX: "left",
+      originY: "top",
     });
   }
 
