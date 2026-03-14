@@ -1,4 +1,4 @@
-import { fabric } from "fabric";
+import { Canvas } from "fabric";
 import Pointer from "./pointer";
 import Board from "./board";
 import Sound from "./sound";
@@ -9,7 +9,7 @@ export default class Game {
   private currentPiece: Piece;
   private pointer: Pointer;
 
-  constructor(private readonly canvas: fabric.Canvas) {
+  constructor(private readonly canvas: Canvas) {
     const tileSize = (window as any)._tileSize;
     const horizontalTiles = (window as any)._horizontalTiles;
     const verticalTiles = (window as any)._verticalTiles;

@@ -1,4 +1,4 @@
-import { fabric } from "fabric";
+import { Canvas, FabricImage } from "fabric";
 import Board from "./board";
 import types from "./piece-types";
 import { v4 as uuid } from "uuid";
@@ -6,12 +6,12 @@ import { v4 as uuid } from "uuid";
 export default class Piece {
   type: number;
   color: string;
-  doll: fabric.Image;
+  doll: FabricImage;
 
   public readonly id: string;
 
   constructor(
-    private readonly canvas: fabric.Canvas,
+    private readonly canvas: Canvas,
     private readonly board: Board,
     public row: number,
     public column: number
@@ -19,7 +19,7 @@ export default class Piece {
     this.id = uuid();
     this.type = Math.floor(Math.random() * 6) + 1;
     this.color = types[this.type];
-    this.doll = new fabric.Image((window as any)._piecesImages[this.type], {
+    this.doll = new FabricImage((window as any)._piecesImages[this.type], {
       top: this.row * this.board.tileSize + 1,
       left: this.column * this.board.tileSize + 1,
       selectable: false,
@@ -35,23 +35,23 @@ export default class Piece {
   }
 
   move(newRow: number, newColumn: number) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.row = newRow;
       this.column = newColumn;
 
-      this.getDoll()
-        .bringToFront()
-        .animate(
-          {
-            left: 1 + newColumn * (window as any)._tileSize,
-            top: 1 + newRow * (window as any)._tileSize,
-          },
-          {
-            duration: 500,
-            onChange: this.canvas.renderAll.bind(this.canvas),
-            onComplete: resolve,
-          }
-        );
+      const doll = this.getDoll();
+      this.canvas.bringObjectToFront(doll);
+      doll.animate(
+        {
+          left: 1 + newColumn * (window as any)._tileSize,
+          top: 1 + newRow * (window as any)._tileSize,
+        },
+        {
+          duration: 500,
+          onChange: this.canvas.renderAll.bind(this.canvas),
+          onComplete: resolve,
+        }
+      );
     });
   }
 

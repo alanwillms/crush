@@ -1,10 +1,10 @@
-import { fabric } from "fabric";
+import { Canvas, FabricText } from "fabric";
 
 export default class Pointer {
-  private doll: fabric.Text;
+  private doll: FabricText;
 
   constructor(
-    private readonly canvas: fabric.Canvas,
+    private readonly canvas: Canvas,
     private movements = 0,
     private piecesDestroyed = 0
   ) {
@@ -28,7 +28,7 @@ export default class Pointer {
   }
 
   private createDoll() {
-    return new fabric.Text(
+    return new FabricText(
       `${this.piecesDestroyed} pieces ${this.movements} movements`,
       {
         left:

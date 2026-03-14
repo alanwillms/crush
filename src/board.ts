@@ -1,4 +1,4 @@
-import { fabric } from "fabric";
+import { Canvas, Rect } from "fabric";
 import Piece from "./piece";
 import Game from "./game";
 
@@ -29,7 +29,7 @@ export default class Board {
   private locked = false;
 
   constructor(
-    private readonly canvas: fabric.Canvas,
+    private readonly canvas: Canvas,
     private readonly game: Game,
     private readonly width: number,
     private readonly height: number,
@@ -70,7 +70,7 @@ export default class Board {
 
         this.canvas.add(
           // Draw cell
-          new fabric.Rect({
+          new Rect({
             top: top,
             left: left,
             width: this.tileSize,
