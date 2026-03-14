@@ -24,9 +24,9 @@ export default class Game {
     this.pointer = new Pointer(this.canvas);
 
     document.getElementById("app").style.width =
-      horizontalTiles * tileSize + 1 + "px";
+      horizontalTiles * tileSize + tileSize / 2 + 1 + "px";
     document.getElementById("app").style.height =
-      verticalTiles * tileSize + 1 + "px";
+      verticalTiles * tileSize + tileSize / 2 + 1 + "px";
 
     this.canvas.on("mouse:down", (options) => {
       (window as any)._mouseBeginningX = (options.e as any).offsetX;

@@ -13,8 +13,8 @@ window._piecesImages = {};
 const canvas = new Canvas("canvas", {
   hoverCursor: "pointer",
   selection: false,
-  width: window._horizontalTiles * window._tileSize + 1,
-  height: window._verticalTiles * window._tileSize + 1 + window._pointerHeight,
+  width: window._horizontalTiles * window._tileSize + window._tileSize / 2 + 1,
+  height: (window._verticalTiles + 1) * window._tileSize + 1 + window._pointerHeight,
 });
 
 const loadNextPieceImageOrStartGame = async (index) => {

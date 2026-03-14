@@ -33,7 +33,7 @@ export default class Pointer {
       {
         left:
           ((window as any)._horizontalTiles * (window as any)._tileSize) / 2,
-        top: (window as any)._verticalTiles * (window as any)._tileSize + 1,
+        top: ((window as any)._verticalTiles + 1) * (window as any)._tileSize + 1,
         textAlign: "center",
         originX: "center",
         fontFamily: "Arial",
