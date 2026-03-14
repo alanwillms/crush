@@ -37,6 +37,8 @@ export default class Pointer {
         textAlign: "center",
         originX: "center",
         fontFamily: "Arial",
+        selectable: false,
+        evented: false,
       }
     );
   }
