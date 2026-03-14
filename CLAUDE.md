@@ -5,9 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start Vite dev server
-npm run build    # Production build
-npm run serve    # Preview production build
+pnpm dev      # Start Vite dev server
+pnpm build    # Production build
+pnpm serve    # Preview production build
 ```
 
 No lint or test scripts are configured.
