@@ -9,7 +9,7 @@
     "vite": "^8.0.5"
   },
   "dependencies": {
-    "fabric": "^7.2.0",
+    "fabric": "^7.4.0",
     "uuid": "^14.0.0"
   }
 }
